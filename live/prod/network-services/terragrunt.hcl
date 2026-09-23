@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/network-services?ref=network-services-v0.0.3"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/network-services?ref=network-services-v0.0.4"
 }
 
 include "root" {

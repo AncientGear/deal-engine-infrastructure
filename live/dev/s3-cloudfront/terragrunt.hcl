@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/s3-for-cloudfront?ref=s3-for-cloudfront-v0.1.0"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/s3-for-cloudfront?ref=s3-for-cloudfront-v0.1.1"
 }
 
 include "root" {

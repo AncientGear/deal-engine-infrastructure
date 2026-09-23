@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/acm-cloudflare-certificate?ref=acm-cloudflare-certificate-v0.0.1"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/acm-cloudflare-certificate?ref=acm-cloudflare-certificate-v0.0.2"
 }
 
 include "root" {

@@ -129,7 +129,7 @@ The context is mandatory. The script intentionally does not fall back to the cur
 
 The live stack currently consumes these important platform tags:
 
-- `eks-v0.1.0`
+- `eks-v0.1.1`
 - `eks-irsa-aws-load-balancer-controller-v0.1.0`
 - `k8s-addons-v0.1.0`
 - `k8s-gateway-v0.1.0`
