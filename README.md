@@ -57,6 +57,8 @@ Bootstrap the Terraform remote-state bucket and lock table inside Floci:
 
 Floci is for pre-AWS validation only. Treat successful Floci plans as evidence that the Terraform/Terragrunt wiring is coherent, not as proof that AWS-managed services such as EKS, ACM, RDS, or AWS Load Balancer Controller will behave identically in AWS.
 
+Known limitation: Floci can mock the EKS control-plane AWS API well enough for Terraform plans, but it does not provide a real Kubernetes API server. Kubernetes/Helm units such as `eks-addons` and `k8s-gateway` can plan against simulated EKS metadata, but their applies require a reachable Kubernetes cluster with valid credentials.
+
 ## Dev apply order
 
 Start with `dev`. Do not apply every unit at once until the dependency chain has been proven.
