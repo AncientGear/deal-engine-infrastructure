@@ -40,3 +40,5 @@ override.tf.json
 tfplan
 *.tfplan.*
 crash.*.log
+# Local Floci persisted emulator state
+.floci/

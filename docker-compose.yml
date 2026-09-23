@@ -1,0 +1,13 @@
+---
+services:
+  floci:
+    image: floci/floci:latest
+    container_name: deal-engine-floci
+    ports:
+      - "4566:4566"
+    environment:
+      FLOCI_HOSTNAME: floci
+    volumes:
+      - ./.floci/data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

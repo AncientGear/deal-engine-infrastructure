@@ -21,6 +21,42 @@ Node scheduling metadata still follows the workload isolation intent from the ar
 
 Application Helm charts must set matching `nodeSelector` and `tolerations`; otherwise Kubernetes will not schedule workloads onto these tainted node groups.
 
+## Local AWS simulation with Floci
+
+Use Floci before touching a real AWS account when you want fast syntax, dependency, and state-backend validation.
+
+Start the emulator from this repository:
+
+```bash
+docker compose up -d
+```
+
+If your Docker CLI is accidentally pointing at an unavailable Docker Desktop context, run the same command with the local engine context:
+
+```bash
+DOCKER_CONTEXT=default docker compose up -d
+```
+
+Export the local AWS-compatible endpoint and dummy credentials:
+
+```bash
+export AWS_ENDPOINT_URL=http://localhost:4566
+export AWS_DEFAULT_REGION=us-east-2
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export TG_STATE_REGION=us-east-2
+export TG_STATE_BUCKET=dealengine-demo-tf-eks-state-bucket
+export TG_LOCK_TABLE=dealengine-eks-state-locking-table
+```
+
+Bootstrap the Terraform remote-state bucket and lock table inside Floci:
+
+```bash
+./scripts/floci-bootstrap-state.sh
+```
+
+Floci is for pre-AWS validation only. Treat successful Floci plans as evidence that the Terraform/Terragrunt wiring is coherent, not as proof that AWS-managed services such as EKS, ACM, RDS, or AWS Load Balancer Controller will behave identically in AWS.
+
 ## Dev apply order
 
 Start with `dev`. Do not apply every unit at once until the dependency chain has been proven.
