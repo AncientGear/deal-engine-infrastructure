@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/rds?ref=rds-v0.0.2"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/rds?ref=rds-v0.1.0"
 }
 
 include "root" {
@@ -13,15 +13,14 @@ include "env" {
 }
 
 inputs = {
-  allocated_storage    = 20
-  db_name              = "my_db"
-  engine               = "postgres"
-  port                 = "5432"
-  engine_version       = "15.3"
-  instance_class       = "db.t4.micro"
-  username             = "${include.env.locals.env}_user"
-  parameter_group_name = "default.postgres15.3"
-  skip_final_snapshot  = true
+  allocated_storage   = 20
+  db_name             = "my_db"
+  engine              = "postgres"
+  port                = "5432"
+  engine_version      = "15.3"
+  instance_class      = "db.t4.micro"
+  username            = "${include.env.locals.env}_user"
+  skip_final_snapshot = true
   tags = {
     Name        = "my-rds-instance"
     Environment = "${include.env.locals.env}"
