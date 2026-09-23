@@ -1,0 +1,105 @@
+# Deal Engine Infrastructure
+
+This repository owns the live Terraform/Terragrunt configuration for the Deal Engine platform environments.
+
+Each environment under `live/` is modeled as a separate EKS-based stack:
+
+- `live/dev`
+- `live/staging`
+- `live/prod`
+
+The reusable modules are versioned from `git@github.com:AncientGear/infrastructure-modules.git`.
+
+## Environment model
+
+The current live model uses one EKS cluster per environment.
+
+Node scheduling metadata still follows the workload isolation intent from the architecture proposal:
+
+- `dev` and `staging` node groups use `workload=shared` labels and taints.
+- `prod` node groups use `workload=prod` labels and taints.
+
+Application Helm charts must set matching `nodeSelector` and `tolerations`; otherwise Kubernetes will not schedule workloads onto these tainted node groups.
+
+## Dev apply order
+
+Start with `dev`. Do not apply every unit at once until the dependency chain has been proven.
+
+Recommended order:
+
+1. `live/dev/vpc`
+2. `live/dev/ecr`
+3. `live/dev/rds`
+4. `live/dev/eks`
+5. `live/dev/lbc-irsa`
+6. Gateway API CRD bootstrap
+7. `live/dev/eks-addons`
+8. `live/dev/alb-certificate`
+9. `live/dev/k8s-gateway`
+10. `live/dev/network-services`
+11. `live/dev/s3-cloudfront`
+
+### Why this order
+
+- `vpc` creates the networking base consumed by most other units.
+- `ecr` is independent and can be created early.
+- `rds` depends on VPC subnets and security boundaries.
+- `eks` depends on VPC private app subnets.
+- `lbc-irsa` depends on EKS OIDC outputs and VPC identity.
+- Gateway API CRDs must exist before Terraform can manage Gateway API resources through the Kubernetes provider.
+- `eks-addons` installs AWS Load Balancer Controller and depends on the IRSA role.
+- `alb-certificate` provides the regional ACM certificate used by the Gateway listener.
+- `k8s-gateway` depends on EKS, AWS Load Balancer Controller, VPC private subnets, and the ALB certificate.
+- `network-services` is needed for private access patterns but does not need to block basic cluster creation.
+- `s3-cloudfront` can be validated after the platform ingress path is clearer.
+
+## Per-unit workflow
+
+For each unit, use this sequence:
+
+1. Review the unit inputs.
+2. Format HCL from `live/` after edits.
+3. Validate HCL.
+4. Run a plan for the single unit.
+5. Read the plan before apply.
+6. Apply only when the plan matches intent.
+
+Example command shape from a unit directory:
+
+```bash
+terragrunt init
+terragrunt plan
+terragrunt apply
+```
+
+Prefer running commands from the target unit directory so dependency and generated-provider behavior is obvious.
+
+## Gateway API CRD bootstrap
+
+Before applying `live/<env>/k8s-gateway`, bootstrap CRDs against the explicit Kubernetes context for that environment.
+
+From `bootstrap/gateway-api`:
+
+```bash
+./gateway-crds.sh diff --context <context-name>
+./gateway-crds.sh apply --context <context-name>
+```
+
+The context is mandatory. The script intentionally does not fall back to the current `kubectl` context.
+
+## Current module tags
+
+The live stack currently consumes these important platform tags:
+
+- `eks-v0.1.0`
+- `eks-irsa-aws-load-balancer-controller-v0.1.0`
+- `k8s-addons-v0.1.0`
+- `k8s-gateway-v0.1.0`
+
+## Known follow-ups
+
+- Add the backend Helm chart with matching `nodeSelector` and `tolerations` per environment.
+- Add Argo CD Applications after the chart exists.
+- Validate whether `network-services` should be applied before private image pulls or secret access are tested.
+- Decide how CloudFront will discover or receive the ALB target created asynchronously by AWS Load Balancer Controller.
+- Consider whether `dev` and `staging` should remain separate clusters or eventually converge toward the original shared-cluster architecture proposal.
