@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.0.1"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.1.0"
 }
 
 include "root" {
@@ -22,6 +22,19 @@ inputs = {
     general = {
       capacity_type  = "ON_DEMAND"
       instance_types = ["m5.xlarge"]
+
+      labels = {
+        workload = "prod"
+      }
+
+      taints = [
+        {
+          key    = "workload"
+          value  = "prod"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+
       scaling_config = {
         desired_size = 2
         max_size     = 8
