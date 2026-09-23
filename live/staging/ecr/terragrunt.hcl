@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/ecr?ref=ecr-v0.0.2"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/ecr?ref=ecr-v0.0.3"
 }
 
 include "root" {
