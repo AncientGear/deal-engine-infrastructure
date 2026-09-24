@@ -24,7 +24,7 @@ inputs = {
   node_groups = {
     general = {
       capacity_type  = "ON_DEMAND"
-      instance_types = ["m5.xlarge"]
+      instance_types = ["t3.small"]
 
       labels = {
         workload = "prod"
