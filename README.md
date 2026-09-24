@@ -125,13 +125,40 @@ From `bootstrap/gateway-api`:
 
 The context is mandatory. The script intentionally does not fall back to the current `kubectl` context.
 
+## Private addon images
+
+The EKS nodes run in private subnets without NAT. Addon images must be available from private regional ECR so they can be pulled through the VPC endpoints.
+
+Mirror the AWS Load Balancer Controller image before applying `live/dev/eks-addons`:
+
+```bash
+aws ecr get-login-password --profile ahau-2026 --region us-east-2 \
+  | docker login --username AWS --password-stdin 989200477899.dkr.ecr.us-east-2.amazonaws.com
+
+aws ecr create-repository \
+  --profile ahau-2026 \
+  --region us-east-2 \
+  --repository-name platform/aws-load-balancer-controller
+
+docker pull public.ecr.aws/eks/aws-load-balancer-controller:v3.5.0
+
+docker tag \
+  public.ecr.aws/eks/aws-load-balancer-controller:v3.5.0 \
+  989200477899.dkr.ecr.us-east-2.amazonaws.com/platform/aws-load-balancer-controller:v3.5.0
+
+docker push \
+  989200477899.dkr.ecr.us-east-2.amazonaws.com/platform/aws-load-balancer-controller:v3.5.0
+```
+
+If the repository already exists, the `create-repository` command can be skipped.
+
 ## Current module tags
 
 The live stack currently consumes these important platform tags:
 
 - `eks-v0.1.2`
-- `eks-irsa-aws-load-balancer-controller-v0.1.0`
-- `k8s-addons-v0.1.0`
+- `eks-irsa-aws-load-balancer-controller-v0.1.1`
+- `k8s-addons-v0.1.2`
 - `k8s-gateway-v0.1.0`
 
 ## Known follow-ups

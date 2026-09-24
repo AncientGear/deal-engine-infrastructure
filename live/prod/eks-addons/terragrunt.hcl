@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/k8s-addons?ref=k8s-addons-v0.1.1"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/k8s-addons?ref=k8s-addons-v0.1.2"
 }
 
 include "root" {
@@ -22,6 +22,7 @@ inputs = {
     role_arn             = dependency.lbc_irsa.outputs.role_arn
     namespace            = dependency.lbc_irsa.outputs.namespace
     service_account_name = dependency.lbc_irsa.outputs.service_account_name
+    image_repository     = "${include.env.locals.account_id}.dkr.ecr.${include.env.locals.region}.amazonaws.com/platform/aws-load-balancer-controller"
 
     node_selector = {
       workload = "prod"
