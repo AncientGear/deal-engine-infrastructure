@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks-irsa-aws-load-balancer-controller?ref=eks-irsa-aws-load-balancer-controller-v0.1.0"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks-irsa-aws-load-balancer-controller?ref=eks-irsa-aws-load-balancer-controller-v0.1.1"
 }
 
 include "root" {
