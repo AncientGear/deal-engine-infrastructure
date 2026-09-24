@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/k8s-addons?ref=k8s-addons-v0.1.0"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/k8s-addons?ref=k8s-addons-v0.1.1"
 }
 
 include "root" {
@@ -22,6 +22,19 @@ inputs = {
     role_arn             = dependency.lbc_irsa.outputs.role_arn
     namespace            = dependency.lbc_irsa.outputs.namespace
     service_account_name = dependency.lbc_irsa.outputs.service_account_name
+
+    node_selector = {
+      workload = "shared"
+    }
+
+    tolerations = [
+      {
+        key      = "workload"
+        operator = "Equal"
+        value    = "shared"
+        effect   = "NoSchedule"
+      }
+    ]
   }
 }
 
