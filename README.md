@@ -67,20 +67,24 @@ Recommended order:
 
 1. `live/dev/vpc`
 2. `live/dev/ecr`
-3. `live/dev/network-services`
-4. `live/dev/rds`
-5. `live/dev/eks`
-6. `live/dev/lbc-irsa`
-7. Gateway API CRD bootstrap
-8. `live/dev/eks-addons`
-9. `live/dev/alb-certificate`
-10. `live/dev/k8s-gateway`
-11. `live/dev/s3-cloudfront`
+3. `live/platform/platform-images/aws-load-balancer-controller`
+4. Mirror the AWS Load Balancer Controller image with `scripts/mirror-platform-image.sh`
+5. `live/dev/network-services`
+6. `live/dev/rds`
+7. `live/dev/eks`
+8. `live/dev/lbc-irsa`
+9. Gateway API CRD bootstrap
+10. `live/dev/eks-addons`
+11. `live/dev/alb-certificate`
+12. `live/dev/k8s-gateway`
+13. `live/dev/s3-cloudfront`
 
 ### Why this order
 
 - `vpc` creates the networking base consumed by most other units.
 - `ecr` is independent and can be created early.
+- `platform-images` creates private ECR repositories for platform addon image mirrors.
+- The mirror script copies required public addon images into private ECR before nodes need to pull them.
 - `network-services` creates private AWS service endpoints required by nodes running in private subnets without NAT.
 - `rds` depends on VPC subnets and security boundaries.
 - `eks` depends on VPC private app subnets and uses a private API endpoint so managed nodes can join without outbound internet access.
@@ -129,28 +133,21 @@ The context is mandatory. The script intentionally does not fall back to the cur
 
 The EKS nodes run in private subnets without NAT. Addon images must be available from private regional ECR so they can be pulled through the VPC endpoints.
 
-Mirror the AWS Load Balancer Controller image before applying `live/dev/eks-addons`:
+Create the private mirror repository with Terraform before applying `live/dev/eks-addons`:
 
 ```bash
-aws ecr get-login-password --profile ahau-2026 --region us-east-2 \
-  | docker login --username AWS --password-stdin 989200477899.dkr.ecr.us-east-2.amazonaws.com
-
-aws ecr create-repository \
-  --profile ahau-2026 \
-  --region us-east-2 \
-  --repository-name platform/aws-load-balancer-controller
-
-docker pull public.ecr.aws/eks/aws-load-balancer-controller:v3.5.0
-
-docker tag \
-  public.ecr.aws/eks/aws-load-balancer-controller:v3.5.0 \
-  989200477899.dkr.ecr.us-east-2.amazonaws.com/platform/aws-load-balancer-controller:v3.5.0
-
-docker push \
-  989200477899.dkr.ecr.us-east-2.amazonaws.com/platform/aws-load-balancer-controller:v3.5.0
+cd live/platform/platform-images/aws-load-balancer-controller
+terragrunt init
+terragrunt apply
 ```
 
-If the repository already exists, the `create-repository` command can be skipped.
+Then mirror the controller image into that repository:
+
+```bash
+./scripts/mirror-platform-image.sh aws-load-balancer-controller v3.5.0
+```
+
+The script is intentionally generic: add a new image-key mapping when another platform addon needs a private mirror.
 
 ## Current module tags
 
