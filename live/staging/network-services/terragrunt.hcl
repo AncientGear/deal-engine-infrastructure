@@ -17,22 +17,37 @@ inputs = {
     {
       service_name = "com.amazonaws.${include.env.locals.region}.ecr.api"
       subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
-      private_dns  = false
+      private_dns  = true
     },
     {
       service_name = "com.amazonaws.${include.env.locals.region}.ecr.dkr"
       subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
-      private_dns  = false
+      private_dns  = true
     },
     {
       service_name = "com.amazonaws.${include.env.locals.region}.sts"
       subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
-      private_dns  = false
+      private_dns  = true
     },
     {
       service_name = "com.amazonaws.${include.env.locals.region}.secretsmanager"
       subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
-      private_dns  = false
+      private_dns  = true
+    },
+    {
+      service_name = "com.amazonaws.${include.env.locals.region}.ec2"
+      subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
+      private_dns  = true
+    },
+    {
+      service_name = "com.amazonaws.${include.env.locals.region}.eks"
+      subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
+      private_dns  = true
+    },
+    {
+      service_name = "com.amazonaws.${include.env.locals.region}.logs"
+      subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
+      private_dns  = true
     }
   ]
 

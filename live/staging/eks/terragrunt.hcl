@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.1.1"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.1.2"
 }
 
 include "root" {
@@ -17,6 +17,9 @@ inputs = {
   env         = include.env.locals.env
   eks_name    = "demo"
   subnet_ids  = dependency.vpc.outputs.private_app_subnet_ids
+
+  endpoint_private_access = true
+  endpoint_public_access  = true
 
   node_groups = {
     general = {

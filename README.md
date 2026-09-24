@@ -67,28 +67,28 @@ Recommended order:
 
 1. `live/dev/vpc`
 2. `live/dev/ecr`
-3. `live/dev/rds`
-4. `live/dev/eks`
-5. `live/dev/lbc-irsa`
-6. Gateway API CRD bootstrap
-7. `live/dev/eks-addons`
-8. `live/dev/alb-certificate`
-9. `live/dev/k8s-gateway`
-10. `live/dev/network-services`
+3. `live/dev/network-services`
+4. `live/dev/rds`
+5. `live/dev/eks`
+6. `live/dev/lbc-irsa`
+7. Gateway API CRD bootstrap
+8. `live/dev/eks-addons`
+9. `live/dev/alb-certificate`
+10. `live/dev/k8s-gateway`
 11. `live/dev/s3-cloudfront`
 
 ### Why this order
 
 - `vpc` creates the networking base consumed by most other units.
 - `ecr` is independent and can be created early.
+- `network-services` creates private AWS service endpoints required by nodes running in private subnets without NAT.
 - `rds` depends on VPC subnets and security boundaries.
-- `eks` depends on VPC private app subnets.
+- `eks` depends on VPC private app subnets and uses a private API endpoint so managed nodes can join without outbound internet access.
 - `lbc-irsa` depends on EKS OIDC outputs and VPC identity.
 - Gateway API CRDs must exist before Terraform can manage Gateway API resources through the Kubernetes provider.
 - `eks-addons` installs AWS Load Balancer Controller and depends on the IRSA role.
 - `alb-certificate` provides the regional ACM certificate used by the Gateway listener.
 - `k8s-gateway` depends on EKS, AWS Load Balancer Controller, VPC private subnets, and the ALB certificate.
-- `network-services` is needed for private access patterns but does not need to block basic cluster creation.
 - `s3-cloudfront` can be validated after the platform ingress path is clearer.
 
 ## Per-unit workflow
@@ -129,7 +129,7 @@ The context is mandatory. The script intentionally does not fall back to the cur
 
 The live stack currently consumes these important platform tags:
 
-- `eks-v0.1.1`
+- `eks-v0.1.2`
 - `eks-irsa-aws-load-balancer-controller-v0.1.0`
 - `k8s-addons-v0.1.0`
 - `k8s-gateway-v0.1.0`
@@ -138,6 +138,5 @@ The live stack currently consumes these important platform tags:
 
 - Add the backend Helm chart with matching `nodeSelector` and `tolerations` per environment.
 - Add Argo CD Applications after the chart exists.
-- Validate whether `network-services` should be applied before private image pulls or secret access are tested.
 - Decide how CloudFront will discover or receive the ALB target created asynchronously by AWS Load Balancer Controller.
 - Consider whether `dev` and `staging` should remain separate clusters or eventually converge toward the original shared-cluster architecture proposal.
