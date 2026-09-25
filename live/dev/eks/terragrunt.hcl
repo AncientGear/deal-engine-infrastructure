@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.1.2"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.1.3"
 }
 
 include "root" {
@@ -20,6 +20,32 @@ inputs = {
 
   endpoint_private_access = true
   endpoint_public_access  = true
+
+  coredns = {
+    enabled                   = true
+    addon_version             = "v1.14.6-eksbuild.4"
+    replica_count             = 2
+    workload_toleration_value = "shared"
+    corefile                  = <<-EOT
+.:53 {
+    errors
+    health {
+        lameduck 5s
+    }
+    ready
+    kubernetes cluster.local in-addr.arpa ip6.arpa {
+        pods insecure
+        fallthrough in-addr.arpa ip6.arpa
+    }
+    prometheus :9153
+    forward . /etc/resolv.conf
+    cache 30
+    loop
+    reload
+    loadbalance
+}
+EOT
+  }
 
   node_groups = {
     general = {

@@ -153,10 +153,12 @@ The script is intentionally generic: add a new image-key mapping when another pl
 
 The live stack currently consumes these important platform tags:
 
-- `eks-v0.1.2`
+- `eks-v0.1.3`
 - `eks-irsa-aws-load-balancer-controller-v0.1.1`
 - `k8s-addons-v0.1.2`
 - `k8s-gateway-v0.1.0`
+
+CoreDNS adoption requires inspecting existing addon conflicts before applying: the `NONE` conflict strategy does not overwrite them automatically. `preserve = true` leaves workloads in place when addon management is removed; it does not protect workloads from cluster destruction. Review the plan and apply the change yourself.
 
 ## Known follow-ups
 
