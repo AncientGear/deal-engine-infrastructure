@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/vpc?ref=vpc-v0.1.0"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/vpc?ref=vpc-v0.2.0"
 }
 
 include "root" {
