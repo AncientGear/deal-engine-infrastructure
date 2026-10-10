@@ -42,3 +42,6 @@ tfplan
 crash.*.log
 # Local Floci persisted emulator state
 .floci/
+# Local Pi runtime state
+.atl/
+odd
