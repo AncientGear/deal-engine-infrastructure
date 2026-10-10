@@ -48,6 +48,11 @@ inputs = {
       service_name = "com.amazonaws.${include.env.locals.region}.logs"
       subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
       private_dns  = true
+    },
+    {
+      service_name = "com.amazonaws.${include.env.locals.region}.elasticloadbalancing"
+      subnet_ids   = dependency.vpc.outputs.private_app_subnet_ids
+      private_dns  = true
     }
   ]
 

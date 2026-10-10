@@ -13,12 +13,13 @@ include "env" {
 }
 
 inputs = {
-  cluster_name      = dependency.eks.outputs.eks_name
-  vpc_id            = dependency.vpc.outputs.vpc_id
-  aws_region        = include.env.locals.region
-  oidc_provider_arn = dependency.eks.outputs.oidc_provider_arn
-  oidc_provider_url = dependency.eks.outputs.oidc_provider_url
-  role_name         = "${include.env.locals.env}-${include.env.locals.project}-aws-load-balancer-controller"
+  cluster_name                             = dependency.eks.outputs.eks_name
+  vpc_id                                   = dependency.vpc.outputs.vpc_id
+  aws_region                               = include.env.locals.region
+  oidc_provider_arn                        = dependency.eks.outputs.oidc_provider_arn
+  oidc_provider_url                        = dependency.eks.outputs.oidc_provider_url
+  aws_load_balancer_controller_policy_name = "${include.env.locals.env}-${include.env.locals.project}-aws-load-balancer-controller"
+  role_name                                = "${include.env.locals.env}-${include.env.locals.project}-aws-load-balancer-controller"
 
   namespace            = "kube-system"
   service_account_name = "aws-load-balancer-controller"
