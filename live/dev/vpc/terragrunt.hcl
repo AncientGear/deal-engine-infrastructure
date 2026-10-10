@@ -14,6 +14,7 @@ include "env" {
 
 inputs = {
   env                 = include.env.locals.env
+  nat_mode            = "single"
   vpc_cidr_block      = "10.0.0.0/19"
   azs                 = ["us-east-2a", "us-east-2b"]
   private_app_subnets = ["10.0.0.0/21", "10.0.8.0/21"]
