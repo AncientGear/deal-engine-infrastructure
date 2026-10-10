@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/k8s-addons?ref=k8s-addons-v0.1.2"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/k8s-addons?ref=k8s-addons-v0.2.0"
 }
 
 include "root" {
@@ -23,6 +23,8 @@ inputs = {
     namespace            = dependency.lbc_irsa.outputs.namespace
     service_account_name = dependency.lbc_irsa.outputs.service_account_name
     image_repository     = "${include.env.locals.account_id}.dkr.ecr.${include.env.locals.region}.amazonaws.com/platform/aws-load-balancer-controller"
+    # Requires a newly published k8s-addons module and verified ARM mirror before apply.
+    image_tag = "v3.5.0-arm64"
 
     node_selector = {
       workload = "shared"

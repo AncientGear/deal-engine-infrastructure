@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.2.0"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/eks?ref=eks-v0.3.0"
 }
 
 include "root" {
@@ -17,6 +17,10 @@ inputs = {
   env         = include.env.locals.env
   eks_name    = "demo"
   subnet_ids  = dependency.vpc.outputs.private_app_subnet_ids
+
+  node_subnet_ids = [
+    dependency.vpc.outputs.private_app_subnet_ids[0]
+  ]
 
   endpoint_private_access = true
   endpoint_public_access  = true
@@ -50,7 +54,9 @@ EOT
   node_groups = {
     general = {
       capacity_type  = "ON_DEMAND"
-      instance_types = ["t3.small"]
+      instance_types = ["t4g.medium"]
+      # Publish and pin a module version exposing ami_type before applying this change.
+      ami_type = "AL2023_ARM_64_STANDARD"
 
       labels = {
         workload = "shared"
