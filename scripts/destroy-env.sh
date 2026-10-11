@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo 'Usage: destroy-env.sh --env dev|staging|prod --confirm destroy-ENV [--profile PROFILE] [--expected-account 12-DIGIT-ID] [--region REGION] [--state-region REGION] [--state-bucket BUCKET] [--lock-table TABLE] [--skip-ecr-purge] [--auto-approve] --delete-namespaces'
+  echo 'Usage: destroy-env.sh --env dev|staging|prod --confirm destroy-ENV [--profile PROFILE] [--expected-account 12-DIGIT-ID] [--region REGION] [--state-region REGION] [--state-bucket BUCKET] [--skip-ecr-purge] [--auto-approve] --delete-namespaces'
 }
 env_name='' confirm=''
 aws_profile="${AWS_PROFILE:-ahau-2026}"
@@ -10,12 +10,11 @@ expected_account=989200477899
 aws_region="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-2}}"
 state_region="${TG_STATE_REGION:-us-east-2}"
 state_bucket="${TG_STATE_BUCKET:-dealengine-demo-tf-eks-state-bucket}"
-lock_table="${TG_LOCK_TABLE:-dealengine-eks-state-locking-table}"
 skip_ecr_purge=false auto_approve=false delete_namespaces=false
 seen_env=false seen_confirm=false
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --env|--confirm|--profile|--expected-account|--region|--state-region|--state-bucket|--lock-table)
+    --env|--confirm|--profile|--expected-account|--region|--state-region|--state-bucket)
       option="$1"
       if [ "$#" -lt 2 ] || [ -z "$2" ] || [[ "$2" == --* ]]; then echo "Missing value for $option" >&2; exit 1; fi
       case "$option" in
@@ -26,7 +25,6 @@ while [ "$#" -gt 0 ]; do
         --region) aws_region="$2" ;;
         --state-region) state_region="$2" ;;
         --state-bucket) state_bucket="$2" ;;
-        --lock-table) lock_table="$2" ;;
       esac
       shift 2 ;;
     --skip-ecr-purge) skip_ecr_purge=true; shift ;;
@@ -53,13 +51,14 @@ command -v python3 >/dev/null || { echo 'python3 is required' >&2; exit 1; }
 for variable in ${!AWS_ENDPOINT_URL_@}; do unset "$variable"; done
 unset AWS_ENDPOINT_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 export AWS_IGNORE_CONFIGURED_ENDPOINT_URLS=true AWS_PROFILE="$aws_profile" AWS_REGION="$aws_region" AWS_DEFAULT_REGION="$aws_region"
-export TG_STATE_REGION="$state_region" TG_STATE_BUCKET="$state_bucket" TG_LOCK_TABLE="$lock_table"
+unset TG_LOCK_TABLE
+export TG_STATE_REGION="$state_region" TG_STATE_BUCKET="$state_bucket"
 account_id="$(aws sts get-caller-identity --profile "$aws_profile" --query Account --output text)"
 if [ "$account_id" != "$expected_account" ]; then echo "Account mismatch: expected $expected_account, got $account_id" >&2; exit 1; fi
 caller_arn="$(aws sts get-caller-identity --profile "$aws_profile" --query Arn --output text)"
 echo "About to destroy $env_name infrastructure (destructive; data loss possible)"
 echo "  account: $account_id; caller: $caller_arn; region: $aws_region"
-echo "  state: s3://$state_bucket ($state_region), lock table $lock_table"
+echo "  state: s3://$state_bucket ($state_region), native S3 locking"
 if [ "$env_name" = prod ]; then echo 'WARNING: production requires a final RDS snapshot; snapshot or bucket protection may block teardown.' >&2; fi
 if [ -t 0 ]; then
   read -r -p "Type destroy-$env_name again to continue: " typed

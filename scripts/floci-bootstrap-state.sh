@@ -6,7 +6,6 @@ AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-2}"
 AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}"
 AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
 TG_STATE_BUCKET="${TG_STATE_BUCKET:-dealengine-demo-tf-eks-state-bucket}"
-TG_LOCK_TABLE="${TG_LOCK_TABLE:-dealengine-eks-state-locking-table}"
 
 export AWS_ENDPOINT_URL AWS_DEFAULT_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
 
@@ -41,15 +40,5 @@ else
   fi
 fi
 
-if aws_local dynamodb describe-table --table-name "$TG_LOCK_TABLE" >/dev/null 2>&1; then
-  echo "DynamoDB lock table already exists: ${TG_LOCK_TABLE}"
-else
-  echo "Creating DynamoDB lock table: ${TG_LOCK_TABLE}"
-  aws_local dynamodb create-table \
-    --table-name "$TG_LOCK_TABLE" \
-    --billing-mode PAY_PER_REQUEST \
-    --attribute-definitions AttributeName=LockID,AttributeType=S \
-    --key-schema AttributeName=LockID,KeyType=HASH >/dev/null
-fi
-
-echo "Floci Terraform state backend is ready."
+echo "S3 state bucket is ready: ${TG_STATE_BUCKET}"
+echo 'WARNING: Floci S3 lock compatibility is unverified; stop the workflow if locking fails. Never bypass locking.' >&2

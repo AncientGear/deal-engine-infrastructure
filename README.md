@@ -10,6 +10,24 @@ Each environment under `live/` is modeled as a separate EKS-based stack:
 
 The reusable modules are versioned from `git@github.com:AncientGear/infrastructure-modules.git`.
 
+## Minimum Terraform and S3 locking requirements
+
+Use Terraform **1.10.0 or newer** with Terragrunt. The shared `live/root.hcl`
+declares this executable version constraint; provider version constraints do not
+set the Terraform CLI version. Select Terraform explicitly with Terragrunt's
+`--tf-path` when multiple Terraform/OpenTofu executables are installed.
+
+The shared S3 backend enables native locking with `use_lockfile = true`, keeping
+the existing bucket, region, and per-unit state keys. Operators need S3
+`GetObject`, `PutObject`, and `DeleteObject` permissions on each state object's
+`.tflock` object, in addition to existing state access. Do not disable locking
+when an endpoint or emulator is incompatible; Floci locking support is unverified.
+
+Dev units are reported migrated; staging, prod, and platform changes are
+configuration-only. This preparation does not authorize apply, state migration,
+or deletion of the existing DynamoDB table. Retain that legacy table; its
+removal requires separate approval.
+
 ## Environment model
 
 The current live model uses one EKS cluster per environment.
@@ -46,14 +64,18 @@ export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
 export TG_STATE_REGION=us-east-2
 export TG_STATE_BUCKET=dealengine-demo-tf-eks-state-bucket
-export TG_LOCK_TABLE=dealengine-eks-state-locking-table
 ```
 
-Bootstrap the Terraform remote-state bucket and lock table inside Floci:
+Bootstrap only the Terraform remote-state bucket inside Floci:
 
 ```bash
 ./scripts/floci-bootstrap-state.sh
 ```
+
+Bucket readiness does **not** establish native S3 lock compatibility with Floci.
+Terraform >=1.10 is required, but emulator compatibility remains unverified.
+If locking fails, stop the workflow; do not use `-lock=false` or set
+`use_lockfile = false`. Bootstrap does not probe locking or provision a table.
 
 Floci is for pre-AWS validation only. Treat successful Floci plans as evidence that the Terraform/Terragrunt wiring is coherent, not as proof that AWS-managed services such as EKS, ACM, RDS, or AWS Load Balancer Controller will behave identically in AWS.
 
@@ -151,7 +173,7 @@ bash scripts/destroy-env.sh --env staging --confirm destroy-staging --delete-nam
 bash scripts/destroy-env.sh --env prod --confirm destroy-prod --delete-namespaces
 ```
 
-`scripts/destroy-dev.sh --confirm destroy-dev --delete-namespaces` remains a dev-only compatibility entry point and rejects `--env` overrides. The scripts validate all 12 selected unit configuration files before contacting AWS, check account `989200477899` by default, and clear inherited AWS endpoint overrides and static credentials. Use `--expected-account` only with a verified 12-digit alternate account. Optional `--profile`, `--region`, `--state-region`, `--state-bucket`, and `--lock-table` select credentials and state. Without `--auto-approve`, Terragrunt prompts for each destroy; `--skip-ecr-purge` leaves images intact and may block ECR destruction. Run `bash scripts/tests/test-destroy-env.sh` for offline mock-only checks; Python 3 is required for bounded ECR image deletion.
+`scripts/destroy-dev.sh --confirm destroy-dev --delete-namespaces` remains a dev-only compatibility entry point and rejects `--env` overrides. The scripts validate all 12 selected unit configuration files before contacting AWS, check account `989200477899` by default, and clear inherited AWS endpoint overrides and static credentials. Use `--expected-account` only with a verified 12-digit alternate account. Optional `--profile`, `--region`, `--state-region`, and `--state-bucket` select credentials and state. The obsolete `--lock-table` option is rejected; locking uses the S3 backend. Without `--auto-approve`, Terragrunt prompts for each destroy; `--skip-ecr-purge` leaves images intact and may block ECR destruction. Run `bash scripts/tests/test-destroy-env.sh` for offline mock-only checks; Python 3 is required for bounded ECR image deletion.
 
 **Destructive:** EKS destruction deletes Kubernetes namespaces and **all namespace contents**, even when the namespace unit is managed separately. `--auto-approve` does not replace `--delete-namespaces`. Teardown can permanently remove cluster workloads, databases, networking, and environment-scoped images. Review backups and plans before proceeding. Production requires an RDS final snapshot; snapshot constraints, deletion protection, or nonempty S3 buckets can block teardown. The script does not bypass protection or automatically empty S3 buckets. Shared platform repositories, backend state bucket/lock table, and backend services are excluded. Residual snapshots, EBS volumes, shared infrastructure, and backend storage/locks may continue to incur costs. CoreDNS addon preservation does **not** protect it when the EKS cluster is destroyed.
 

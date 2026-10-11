@@ -17,6 +17,7 @@ export CALLS="$tmp/calls"
 : > "$CALLS"
 cat > "$tmp/bin/aws" <<'MOCK'
 #!/usr/bin/env bash
+[ -z "${TG_LOCK_TABLE+x}" ] || { echo 'legacy table exported' >&2; exit 1; }
 printf 'aws %s\n' "$*" >> "$CALLS"
 case "$*" in
   *get-caller-identity*Account*) echo "${MOCK_ACCOUNT:-989200477899}" ;;
@@ -34,6 +35,7 @@ esac
 MOCK
 cat > "$tmp/bin/terragrunt" <<'MOCK'
 #!/usr/bin/env bash
+[ -z "${TG_LOCK_TABLE+x}" ] || { echo 'legacy table exported' >&2; exit 1; }
 printf 'terragrunt %s %s\n' "$PWD" "$*" >> "$CALLS"
 MOCK
 chmod +x "$tmp/bin/aws" "$tmp/bin/terragrunt"
@@ -44,6 +46,8 @@ reject() {
   if bash "$root/scripts/$1" "${@:2}" >"$tmp/out" 2>&1; then fail "accepted: $*"; fi
   [ ! -s "$CALLS" ] || fail "invalid input made calls: $*"
 }
+reject destroy-env.sh --env dev --confirm destroy-dev --delete-namespaces --lock-table obsolete
+grep -q 'Unknown argument: --lock-table' "$tmp/out" || fail 'obsolete option not rejected as unknown'
 reject destroy-env.sh
 reject destroy-env.sh --env all --confirm destroy-all
 reject destroy-env.sh --env prod --confirm destroy-dev
@@ -64,9 +68,11 @@ for env in dev staging prod; do
   reject destroy-env.sh --env "$env" --confirm "destroy-$env" --delete-namespaces --auto-approve
   mv "$tmp/$env.hcl" "$root/live/$env/k8s-namespaces/terragrunt.hcl"
 done
+export TG_LOCK_TABLE=obsolete-table
 for env in dev staging prod; do
   : > "$CALLS"
   bash "$root/scripts/destroy-env.sh" --env "$env" --confirm "destroy-$env" --delete-namespaces --auto-approve >"$tmp/out" 2>&1 || fail "$env: $(<"$tmp/out")"
+  ! grep -Ei 'lock table|obsolete-table|TG_LOCK_TABLE' "$tmp/out" || fail 'legacy table output'
   mapfile -t units < <(grep 'terragrunt .* destroy ' "$CALLS" | awk '{print $2}' | sed "s|$root/||")
   expected=(k8s-gateway k8s-namespaces alb-certificate eks-addons lbc-irsa eks rds network-services s3-cloudfront frontend-certificate ecr vpc)
   [ "${#units[@]}" -eq 12 ] || fail "$env unit count"
