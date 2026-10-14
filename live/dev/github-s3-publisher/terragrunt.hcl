@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/github-s3-publisher?ref=github-s3-publisher-v0.1.0"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/github-s3-publisher?ref=github-s3-publisher-v0.1.1"
 }
 
 include "root" {
@@ -24,6 +24,8 @@ inputs = {
   role_name         = "dealengine-dev-github-s3-publisher"
   oidc_provider_arn = dependency.github_oidc.outputs.arn
   bucket_arn        = dependency.s3.outputs.bucket_arn
+  enable_promotion            = true
+  cloudfront_distribution_arn = "arn:aws:cloudfront::989200477899:distribution/E9HSDX6N409DP"
 
   github_subject = "repo:AncientGear@24779392/deal-engine-tickets-frontend@1389745547:ref:refs/heads/dev"
 
