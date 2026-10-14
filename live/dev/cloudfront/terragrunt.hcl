@@ -1,5 +1,5 @@
 terraform {
-  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/cloudfront?ref=cloudfront-v0.1.0"
+  source = "git@github.com:AncientGear/infrastructure-modules.git//aws/cloudfront?ref=cloudfront-v0.1.1"
 }
 
 include "root" {
@@ -26,7 +26,8 @@ inputs = {
   bucket_regional_domain_name = dependency.frontend_bucket.outputs.bucket_regional_domain_name
 
   cloudfront_origin_access_control_id = "dealengine-dev-frontend-oac"
-  frontend_release_id                 = "37016745341-1"
+  frontend_release_id                 = "38348691723-1"
+  frontend_origin_mode                = "current"
 
   # Existing controller-managed ALB; refresh this binding if it is recreated.
   alb_origin_arn         = "arn:aws:elasticloadbalancing:us-east-2:989200477899:loadbalancer/app/k8s-gateways-gatewayd-6252289d02/b38919fd1786fc8e"
